@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.21] - 2026-10-13
+
+### Added
+- Skill and README: tag a LinkedIn company page in a post by looking it up with `integrations:trigger <id> mention` (exact vanity name) and putting the returned id and label in a mention span. Needs the Postiz API version that exposes the LinkedIn `mention` tool.
+
 ## [2.0.20] - 2026-10-08
 
 ### Added
