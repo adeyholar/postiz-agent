@@ -384,13 +384,14 @@ LINKEDIN_ID=$(postiz integrations:list | tail -n +2 | jq -r 'first(.[] | select(
 # Look up the page by its vanity name (the part after linkedin.com/company/), exact match only
 MENTION=$(postiz integrations:trigger "$LINKEDIN_ID" mention -d '{"query":"microsoft"}' | tail -n +2)
 ORG_ID=$(echo "$MENTION" | jq -r '.output[0].id // empty')
-ORG_NAME=$(echo "$MENTION" | jq -r '.output[0].label // empty')
+ORG_NAME=$(echo "$MENTION" | jq -r '(.output[0].label // empty) | @html')
 
 # Tag it in the content with a mention span
 if [ -n "$ORG_ID" ]; then
   postiz posts:create \
     -c "<p>Built with <span data-mention-id=\"$ORG_ID\" data-mention-label=\"$ORG_NAME\">@$ORG_NAME</span></p>" \
     -s "2024-12-31T12:00:00Z" \
+    -t draft \
     -i "$LINKEDIN_ID"
 else
   echo "No LinkedIn company page has that exact vanity name"
