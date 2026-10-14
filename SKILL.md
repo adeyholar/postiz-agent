@@ -377,17 +377,24 @@ postiz posts:create \
 
 **LinkedIn - Tag a company page:**
 ```bash
-# Look up the page by its vanity name (the part after linkedin.com/company/), exact match only
-# (tail skips the "Tool result" header line before the JSON)
-MENTION=$(postiz integrations:trigger "$LINKEDIN_ID" mention -d '{"query":"microsoft"}' | tail -n +2)
-ORG_ID=$(echo "$MENTION" | jq -r '.output[0].id')
-ORG_NAME=$(echo "$MENTION" | jq -r '.output[0].label')
+# Works with a "linkedin" or "linkedin-page" channel
+# (tail skips the header line the CLI prints before the JSON)
+LINKEDIN_ID=$(postiz integrations:list | tail -n +2 | jq -r 'first(.[] | select(.identifier=="linkedin" or .identifier=="linkedin-page") | .id)')
 
-# Tag it in the content with a mention span (works for "linkedin" and "linkedin-page")
-postiz posts:create \
-  -c "<p>Built with <span data-mention-id=\"$ORG_ID\" data-mention-label=\"$ORG_NAME\">@$ORG_NAME</span></p>" \
-  -s "2024-12-31T12:00:00Z" \
-  -i "$LINKEDIN_ID"
+# Look up the page by its vanity name (the part after linkedin.com/company/), exact match only
+MENTION=$(postiz integrations:trigger "$LINKEDIN_ID" mention -d '{"query":"microsoft"}' | tail -n +2)
+ORG_ID=$(echo "$MENTION" | jq -r '.output[0].id // empty')
+ORG_NAME=$(echo "$MENTION" | jq -r '.output[0].label // empty')
+
+# Tag it in the content with a mention span
+if [ -n "$ORG_ID" ]; then
+  postiz posts:create \
+    -c "<p>Built with <span data-mention-id=\"$ORG_ID\" data-mention-label=\"$ORG_NAME\">@$ORG_NAME</span></p>" \
+    -s "2024-12-31T12:00:00Z" \
+    -i "$LINKEDIN_ID"
+else
+  echo "No LinkedIn company page has that exact vanity name"
+fi
 ```
 An empty `output` means no page has that exact vanity name. Only company pages can be tagged this way, not people.
 
